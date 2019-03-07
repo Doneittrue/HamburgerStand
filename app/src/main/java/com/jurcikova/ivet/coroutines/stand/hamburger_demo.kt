@@ -2,7 +2,10 @@ package com.jurcikova.ivet.coroutines.stand
 
 import com.jurcikova.ivet.coroutines.stand.entity.*
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.*
+import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.coroutines.channels.actor
+import kotlinx.coroutines.channels.consumeEach
+import kotlinx.coroutines.channels.produce
 import kotlin.random.Random
 import kotlin.system.measureTimeMillis
 
@@ -44,7 +47,8 @@ suspend fun massiveOrder(people: Int, requests: Int, action: suspend () -> Unit)
 @ExperimentalCoroutinesApi
 fun main() {
     val time = measureTimeMillis {
-        runBlocking(CoroutineName("Ivet")) {
+        runBlocking(CoroutineName("")) {
+            val hamburgerStand = HamburgerStand(this + Dispatchers.Default)
             val quantityCounter = quantityCounterActor()
 
             massiveOrder(people = 8, requests = 3) {
@@ -63,15 +67,18 @@ fun main() {
 
             log("Hamburgers to make: ${quantity.await()}")
 
-            processOrders(orders(quantity = quantity.await()))
+            processOrders(hamburgerStand, orders(quantity.await()))
+
+            hamburgerStand.close()
         }
     }
 
     log("Orders processed in $time milliseconds")
 }
 
+@ObsoleteCoroutinesApi
 @ExperimentalCoroutinesApi
-suspend fun processOrders(orders: List<Order>) {
+suspend fun processOrders(hamburgerStand: HamburgerStand, orders: List<Order>) {
     coroutineScope {
         val ordersChannel =
             produce(CoroutineName("Lenka")) {
@@ -81,23 +88,26 @@ suspend fun processOrders(orders: List<Order>) {
             }
 
         launch(CoroutineName("Ivet")) {
-            makeHamburger(ordersChannel)
+            makeHamburger(hamburgerStand, ordersChannel)
         }
+
         launch(CoroutineName("Dominika")) {
-            makeHamburger(ordersChannel)
+            makeHamburger(hamburgerStand, ordersChannel)
         }
     }
 }
 
+@ObsoleteCoroutinesApi
 private suspend fun makeHamburger(
+    stand: HamburgerStand,
     ordersChannel: ReceiveChannel<Order>
 ) = coroutineScope {
     for (order in ordersChannel) {
         log("Processing ${order.id}. order")
 
         val vegetable = cutVegetable(order.id)
-        val meat = async { fryMeat(order.id) }
-        val bun = async { heatBun(order.id) }
+        val meat = async { stand.fryMeat(Meat(order.id)) }
+        val bun = async { stand.heatBun(Bun(order.id)) }
         val hamburger =
             prepareHamburger(vegetable, meat.await(), bun.await())
 
@@ -107,38 +117,18 @@ private suspend fun makeHamburger(
 
 //business methods
 private suspend fun cutVegetable(orderId: Int): Vegetable {
-    log("Cutting vegetable")
-    delay(100)
+    log("Start cutting vegetable")
+    delay(1000)
+    log("Stop cutting vegetable")
     return Vegetable(orderId)
 }
 
-private suspend fun fryMeat(orderId: Int): Meat {
-    log("Frying meat")
-    delay(300)
-    return Meat(orderId)
-}
-
-private suspend fun heatBun(orderId: Int): Bun {
-    log("Heating bun")
-    delay(200)
-    return Bun(orderId)
-}
-
 private suspend fun prepareHamburger(vegetable: Vegetable, meat: Meat, bun: Bun): Hamburger {
-    log("Preparing hamburger")
-    delay(100)
+    log("Start preparing hamburger")
+    delay(500)
+    log("Stop preparing hamburger")
     return Hamburger(vegetable, meat, bun)
 }
 
 //utils methods
-private fun orders(quantity: Int = 1) =
-    List(quantity) { index ->
-        Order(index + 1)
-    }
-
-private fun log(message: String) {
-    println("[${Thread.currentThread().name}] $message")
-}
-
-private fun addHamburger() = Random.nextBoolean()
-
+fun addHamburger() = Random.nextBoolean()
