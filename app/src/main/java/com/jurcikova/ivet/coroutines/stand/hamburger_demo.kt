@@ -16,17 +16,20 @@ fun main() {
     log("Order processed in $time milliseconds")
 }
 
-private suspend fun makeHamburger(orders: List<Order>) =
-    orders.forEach { order ->
-        log("Processing ${order.id}. order")
+private fun makeHamburger(orders: List<Order>) {
+    runBlocking {
+        orders.forEach { order ->
+            log("Processing ${order.id}. order")
 
-        val vegetable = cutVegetable(order.id)
-        val meat = fryMeat(order.id)
-        val bun = heatBun(order.id)
-        val hamburger = prepareHamburger(vegetable, meat, bun)
+            val vegetable = cutVegetable(order.id)
+            val meat = async { fryMeat(order.id) }
+            val bun = async { heatBun(order.id) }
+            val hamburger = prepareHamburger(vegetable, meat.await(), bun.await())
 
-        log("Serve $hamburger")
+            log("Serve $hamburger")
+        }
     }
+}
 
 //business methods
 private suspend fun cutVegetable(orderId: Int): Vegetable {
