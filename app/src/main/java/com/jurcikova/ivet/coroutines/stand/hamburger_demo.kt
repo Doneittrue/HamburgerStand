@@ -16,8 +16,8 @@ fun main() {
     log("Order processed in $time milliseconds")
 }
 
-private fun makeHamburger(orders: List<Order>) {
-    runBlocking {
+private suspend fun makeHamburger(orders: List<Order>) =
+    coroutineScope {
         orders.forEach { order ->
             log("Processing ${order.id}. order")
 
@@ -29,7 +29,6 @@ private fun makeHamburger(orders: List<Order>) {
             log("Serve $hamburger")
         }
     }
-}
 
 //business methods
 private suspend fun cutVegetable(orderId: Int): Vegetable {
