@@ -18,7 +18,7 @@ class HamburgerStand(scope: CoroutineScope) : CoroutineScope by scope {
         val channel: Channel<Bun>
     )
 
-    data class FryingMachineRequest(
+    data class DeepFryerRequest(
         val meat: Meat,
         val channel: Channel<Meat>
     )
@@ -45,8 +45,8 @@ class HamburgerStand(scope: CoroutineScope) : CoroutineScope by scope {
 
 
     @ObsoleteCoroutinesApi
-    private val fryingMachine1 =
-        actor<FryingMachineRequest>(CoroutineName("1.frying_machine")) {
+    private val deepFryer1 =
+        actor<DeepFryerRequest>(CoroutineName("1.deep_fryer")) {
             consumeEach { request ->
                 delay(1000) //FRYING
                 log("Stop frying ${request.meat.id}. meat")
@@ -55,8 +55,8 @@ class HamburgerStand(scope: CoroutineScope) : CoroutineScope by scope {
         }
 
     @ObsoleteCoroutinesApi
-    private val fryingMachine2 =
-        actor<FryingMachineRequest>(CoroutineName("2.frying_machine")) {
+    private val deepFryer2 =
+        actor<DeepFryerRequest>(CoroutineName("2.deep_fryer")) {
             consumeEach { request ->
                 delay(1000) //FRYING
                 log("Stop frying ${request.meat.id}. meat")
@@ -85,12 +85,12 @@ class HamburgerStand(scope: CoroutineScope) : CoroutineScope by scope {
         select<Meat> {
             val chan = Channel<Meat>()
 
-            fryingMachine1.onSend(FryingMachineRequest(meat, chan)) {
-                log("Start frying ${meat.id}. meat in the 1. frying machine ")
+            deepFryer1.onSend(DeepFryerRequest(meat, chan)) {
+                log("Start frying ${meat.id}. meat in the 1. deep fryer ")
                 chan.receive()
             }
-            fryingMachine2.onSend(FryingMachineRequest(meat, chan)) {
-                log("Start frying ${meat.id}. meat in the 2. frying machine")
+            deepFryer2.onSend(DeepFryerRequest(meat, chan)) {
+                log("Start frying ${meat.id}. meat in the 2. deep fryer")
                 chan.receive()
             }
 
@@ -100,7 +100,7 @@ class HamburgerStand(scope: CoroutineScope) : CoroutineScope by scope {
     fun close() {
         microwave1.close()
         microwave2.close()
-        fryingMachine1.close()
-        fryingMachine2.close()
+        deepFryer1.close()
+        deepFryer2.close()
     }
 }
