@@ -88,25 +88,25 @@ private suspend fun makeHamburger(
 
 //business methods
 private suspend fun cutVegetable(orderId: Int): Vegetable {
-    //  log("Cutting vegetable")
-    delay(1000000000)
+    log("Cutting vegetable")
+    delay(1000)
     return Vegetable(orderId)
 }
 
 private suspend fun fryMeat(orderId: Int): Meat {
-    //  log("Frying meat")
+    log("Frying meat")
     delay(2000)
     return Meat(orderId)
 }
 
 private suspend fun heatBun(orderId: Int): Bun {
-    //  log("Heating bun")
+    log("Heating bun")
     delay(500)
     return Bun(orderId)
 }
 
 private suspend fun prepareHamburger(vegetable: Vegetable, meat: Meat, bun: Bun): Hamburger {
-    //  log("Preparing hamburger")
+    log("Preparing hamburger")
     delay(500)
     return Hamburger(vegetable, meat, bun)
 }
