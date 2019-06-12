@@ -17,3 +17,7 @@ data class Hamburger(
     val meat: Meat,
     val bun: Bun
 )
+
+data class Beer(
+    val id: Int
+)

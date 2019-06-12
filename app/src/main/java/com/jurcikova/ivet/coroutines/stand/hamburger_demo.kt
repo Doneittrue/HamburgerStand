@@ -2,18 +2,54 @@ package com.jurcikova.ivet.coroutines.stand
 
 import com.jurcikova.ivet.coroutines.stand.entity.*
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.*
+import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.coroutines.channels.consumeEach
+import kotlinx.coroutines.channels.produce
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlin.system.measureTimeMillis
+
+
+fun CoroutineScope.beersChannel() =
+    produce(CoroutineName("Monika")) {
+        var count = 1
+
+        while (isActive) {
+            log("Tapping $count. beer")
+            send(Beer(count++))
+        }
+    }
+
+var count = 1
+
+fun beersFlow() =
+    flow {
+        log("Tapping $count. beer")
+
+        emit(Beer(count++))
+    }.flowOn(CoroutineName("Monika"))
 
 @ObsoleteCoroutinesApi
 @ExperimentalCoroutinesApi
 fun main() {
     val time = measureTimeMillis {
         runBlocking {
+            log("Stand opened")
+            //val beersChannel = beersChannel()
+            val beersFlow = beersFlow()
+            log("Tap ready")
+
             val ordersChannel =
-                produce(CoroutineName("Lenka")) {
+                produce(CoroutineName("People")) {
+
                     orders(3).forEach { order ->
                         send(order)
+                        log("Order $order requested")
+                        //log("Received ${beersChannel.receive()}")
+                        beersFlow.collect { beer ->
+                            log("Received $beer")
+                        }
                     }
                 }
 
@@ -52,25 +88,25 @@ private suspend fun makeHamburger(
 
 //business methods
 private suspend fun cutVegetable(orderId: Int): Vegetable {
-    log("Cutting vegetable")
-    delay(1000)
+    //  log("Cutting vegetable")
+    delay(1000000000)
     return Vegetable(orderId)
 }
 
 private suspend fun fryMeat(orderId: Int): Meat {
-    log("Frying meat")
+    //  log("Frying meat")
     delay(2000)
     return Meat(orderId)
 }
 
 private suspend fun heatBun(orderId: Int): Bun {
-    log("Heating bun")
+    //  log("Heating bun")
     delay(500)
     return Bun(orderId)
 }
 
 private suspend fun prepareHamburger(vegetable: Vegetable, meat: Meat, bun: Bun): Hamburger {
-    log("Preparing hamburger")
+    //  log("Preparing hamburger")
     delay(500)
     return Hamburger(vegetable, meat, bun)
 }
