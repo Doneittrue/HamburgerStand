@@ -8,6 +8,7 @@ import kotlinx.coroutines.channels.produce
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.take
 import kotlin.system.measureTimeMillis
 
 
@@ -25,9 +26,10 @@ var count = 1
 
 fun beersFlow() =
     flow {
-        log("Tapping $count. beer")
-
-        emit(Beer(count++))
+        while (true) {
+            log("Tapping $count. beer")
+            emit(Beer(count++))
+        }
     }.flowOn(CoroutineName("Monika"))
 
 @ObsoleteCoroutinesApi
@@ -47,7 +49,7 @@ fun main() {
                         send(order)
                         log("Order $order requested")
                         //log("Received ${beersChannel.receive()}")
-                        beersFlow.collect { beer ->
+                        beersFlow.take(1).collect { beer ->
                             log("Received $beer")
                         }
                     }
