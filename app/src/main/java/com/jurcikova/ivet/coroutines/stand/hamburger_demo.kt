@@ -12,12 +12,15 @@ import kotlinx.coroutines.flow.take
 import kotlin.system.measureTimeMillis
 
 
+@ExperimentalCoroutinesApi
 fun CoroutineScope.beersChannel() =
     produce(CoroutineName("Monika")) {
         var count = 1
 
         while (isActive) {
             log("Tapping $count. beer")
+            delay(200)
+
             send(Beer(count++))
         }
     }
@@ -28,6 +31,8 @@ fun beersFlow() =
     flow {
         while (true) {
             log("Tapping $count. beer")
+            delay(200)
+
             emit(Beer(count++))
         }
     }.flowOn(CoroutineName("Monika"))
