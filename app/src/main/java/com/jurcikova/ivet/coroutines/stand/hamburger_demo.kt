@@ -27,6 +27,7 @@ fun CoroutineScope.beersChannel() =
 
 var count = 1
 
+@ExperimentalCoroutinesApi
 fun beersFlow() =
     flow {
         while (true) {
